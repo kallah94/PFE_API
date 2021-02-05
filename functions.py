@@ -1,14 +1,15 @@
-from flask import jsonify
+import numpy as np
+from bson.objectid import ObjectId
 
 
-def cust_jsonify(fields_list, results):
-    column_list = []
-    for i in fields_list:
-        column_list.append(i[0])
-    json_data = []
-    for row in results:
-        data_dict = {}
-        for i in range(len(column_list)):
-            data_dict[column_list[i]] = row[i]
-        json_data.append(data_dict)
-    return json_data
+def newEncoder(o):
+    if type(o) == ObjectId:
+        return str(o)
+    return o.__str__
+
+
+def compare_vectors():
+    vect1 = np.array([67, 4, 81, 5, 2])
+    vect2 = np.array([2, 5, 6, 4, 67])
+    diffcost = np.dot(vect2, vect1)/(np.linalg.norm(vect2)*np.linalg.norm(vect1))
+    return np.abs(diffcost)

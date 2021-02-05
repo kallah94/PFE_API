@@ -1,10 +1,9 @@
 import datetime
-
-from flask import Flask, json, jsonify, request
-from flask_jwt_extended import JWTManager, create_access_token
-from flask_bcrypt import Bcrypt
-from flask_mysqldb import MySQL
 from functions import *
+from flask import Flask, json, jsonify, request
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required
+from flask_bcrypt import Bcrypt
+from flask_pymongo import PyMongo
 
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
@@ -13,92 +12,100 @@ app.config.from_envvar('ENV_FILE_LOCATION')
 app.config['SECRET_KEY'] = 'secret-key-kallah'
 app_context = app.app_context()
 app_context.push()
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'kallah'
-app.config['MYSQL_PASSWORD'] = 'kallah'
-app.config['MYSQL_DB'] = 'testdb'
-mysql = MySQL(app)
+app.config["MONGO_URI"] = "mongodb://localhost:27017/APIBase"
+mongo = PyMongo(app)
 
 
-@app.route('/')
-def hello_world():
-    return ' hello world'
+@app.route('/register', methods=['POST'])
+def register():
+    user_data = json.loads(request.data)
+    username = user_data['username']
+    password = user_data['password']
+    hashed_password = Bcrypt.generate_password_hash(Bcrypt, password)
+    mongo.db.users.insert_one({"username": username, "password": hashed_password})
+    return 'ok', 200
 
 
-@app.route('/users', methods=['GET'])
-def get_users():
-    sql = 'SELECT * FROM users WHERE 1=1'
-    cursor = mysql.connection.cursor()
-    cursor.execute(sql)
-    users = cursor.fetchall()
-    fields_list = cursor.description
-    mysql.connection.commit()
-    cursor.close()
-    data = jsonify({'users': cust_jsonify(fields_list, users)})
-    return data
-
-
-@app.route('/users', methods=['POST'])
-def set_user():
+@app.route('/login', methods=['POST'])
+def login():
     data = json.loads(request.data)
     username = data['username']
     password = data['password']
-    hash_password = bcrypt.generate_password_hash(str(password))
-    sql = "INSERT INTO users(username, password) VALUES (%s, %s)"
-    cursor = mysql.connection.cursor()
-    cursor.execute(sql, (username, hash_password))
-    mysql.connection.commit()
-    return 'ok'
-
-
-@app.route('/criteres', methods=['GET'])
-def get_criteres():
-    sql = 'SELECT * FROM criteres WHERE 1=1'
-    cursor = mysql.connection.cursor()
-    cursor.execute(sql)
-    criteres = cursor.fetchall()
-    fields_list = cursor.description
-    mysql.connection.commit()
-    cursor.close()
-    data = jsonify({'criteres': cust_jsonify(fields_list, criteres)})
-    return data
-
-
-@app.route('/criteres', methods=['POST'])
-def set_critere():
-    data = json.loads(request.data)
-    name = data['name']
-    vlrate = data['vlrate']
-    lrate = data['lrate']
-    mrate = data['mrate']
-    hrate = data['hrate']
-    vhrate = data['vhrate']
-    print(type(vhrate))
-    sql = "INSERT INTO criteres(name, vlrate, lrate, mrate, hrate, vhrate) VALUES (%s, %s, %s, %s, %s, %s)"
-    cursor = mysql.connection.cursor()
-    cursor.execute(sql, (name, vlrate, lrate, mrate, hrate, vhrate))
-    mysql.connection.commit()
-    return 'ok'
-
-
-@app.route('/get_token', methods=['GET'])
-def get_user_data():
-    data = json.loads(request.data)
-    username = data['username']
-    password = data['password']
-    sql = "SELECT * FROM users WHERE username=%s"
-    cursor = mysql.connect.cursor()
-    cursor.execute(sql, (username,))
-    mysql.connection.commit()
-    user = cursor.fetchone()
-    authorized = bcrypt.check_password_hash(user[2], str(password))
+    hashed = mongo.db.users.find_one({"username": username})['password']
+    authorized = bcrypt.check_password_hash(hashed, str(password))
     if not authorized:
         return {'error': 'username or password invalid'}, 401
 
     expires = datetime.timedelta(days=7)
-    access_token = create_access_token(identity=str(user[0]), expires_delta=expires)
+    access_token = create_access_token(identity=str(password), expires_delta=expires)
     return {'token': access_token}, 200
 
 
+@app.route('/users', methods=['GET'])
+def get_users():
+    user_data = list(mongo.db.users.find())
+    user_data = json.dumps(user_data, default=newEncoder)
+    return user_data, 200
+
+
+@app.route('/criteres', methods=['GET'])
+# @jwt_required
+def get_criteres():
+    data = list(mongo.db.criteres.find())
+    data = json.dumps(data, default=newEncoder)
+    return jsonify({'data': data}), 200
+
+
+@app.route('/criteres', methods=['POST'])
+# @jwt_required
+def set_critere():
+    data = json.loads(request.data)
+    print(data)
+    mongo.db.criteres.insert_one(data)
+    return 'Ok', 200
+
+
+@app.route('/criteres/<name>', methods=['GET'])
+def get_critere(name):
+    critere = mongo.db.criteres.find_one({"name": name})
+    critere = json.dumps(critere, default=newEncoder)
+    return critere, 200
+
+
+@app.route('/criteres/<name>', methods=['PUT'])
+def update_critere(name):
+    new_data = json.loads(request.data)
+    vlrate = new_data["vlrate"]
+    lrate = new_data["lrate"]
+    mrate = new_data["mrate"]
+    hrate = new_data["hrate"]
+    vhrate = new_data["vhrate"]
+    mongo.db.criteres.update_one({"name": name},
+                                 {'$set': {"vlrate": vlrate, "lrate": lrate,
+                                           "mrate": mrate, "hrate": hrate, "vhrate": vhrate}})
+    return 'ok'
+
+
+@app.route('/criteres/<name>', methods=['DELETE'])
+def delete_critere(name):
+    mongo.db.criteres.delete_one({"name": name})
+    return 'ok', 200
+
+
+@app.route('/rulesappcloudready', methods=['POST'])
+def set_ruleappcloudready():
+    data = json.loads(request.data)
+    print(data)
+    mongo.db.rulesappcloudready.insert_one(data)
+    return 'ok', 200
+
+
+@app.route('/rulesappcloudready', methods=['GET'])
+def get_rulesappcloudreay():
+    data = list(mongo.db.rulesappcloudready.find())
+    data = json.dumps(data, default=newEncoder)
+    return data, 200
+
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
