@@ -56,7 +56,7 @@ def get_users():
 def get_criteres():
     data = list(mongo.db.criteres.find())
     data = json.dumps(data, default=newEncoder)
-    return jsonify({'data': data}), 200
+    return data, 200
 
 
 @app.route('/criteres', methods=['POST'])
@@ -132,7 +132,7 @@ def update_rule(name):
     mongo.db.rulesappcloudready.update_one({"name": name},
                                            {'$set': {"complexity": complexity,
                                                      "availability": availability, "criticity": criticity}})
-    return 'ok'
+    return 'ok', 200
 
 
 @app.route('/rulesappcloudready/<name>', methods=['DELETE'])
@@ -142,6 +142,46 @@ def delete_rule(name):
 
 
 """ END RULESAPPCLOUDREADY SECTION"""
+
+""" BEGIN PROJECT CRUD """
+
+
+@app.route('/projects', methods=['GET'])
+def get_projects():
+    projects = mongo.db.projects.find()
+    projects = json.dumps(projects, default=newEncoder)
+    return projects, 200
+
+
+@app.route('/projects/<project_name>', methods=['GET'])
+def get_project(project_name):
+    project = mongo.db.projects.find_one({"projectName": project_name})
+    project = json.dumps(project, default=newEncoder)
+    return project, 200
+
+
+@app.route('/projects', methods=['POST'])
+def set_project():
+    project_form = json.loads(request.data)
+    mongo.db.projects.insert_one(project_form)
+    return 'ok', 200
+
+
+@app.route('/projects/<project_name>', methods=['PUT'])
+def update_project(project_name):
+    mongo.db.projects.update_one({"projectName": project_name}, {
+        '$set': {}
+    })
+    return 'ok', 200
+
+
+@app.route('/projects/<project_name>', methods=['DELETE'])
+def delete_project(project_name):
+    mongo.db.projects.delete_one({"projectName": project_name})
+    return 'ok', 200
+
+
+""" END PROJECT CRUD"""
 
 if __name__ == '__main__':
     app.run()
