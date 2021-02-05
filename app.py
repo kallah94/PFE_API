@@ -48,6 +48,9 @@ def get_users():
     return user_data, 200
 
 
+""" BEGIN CRITERES CRUD SECTION """
+
+
 @app.route('/criteres', methods=['GET'])
 # @jwt_required
 def get_criteres():
@@ -92,6 +95,11 @@ def delete_critere(name):
     return 'ok', 200
 
 
+""" END CRITERES CRUD SECTION """
+
+""" BEGIN RULESAPPCLOUDREADY SECTION """
+
+
 @app.route('/rulesappcloudready', methods=['POST'])
 def set_ruleappcloudready():
     data = json.loads(request.data)
@@ -106,6 +114,34 @@ def get_rulesappcloudreay():
     data = json.dumps(data, default=newEncoder)
     return data, 200
 
+
+@app.route('/rulesappcloudready/<name>', methods=['GET'])
+def get_rule(name):
+    rule_data = mongo.db.rulesappcloudready.find_one({"name": name})
+    rule_data = json.dumps(rule_data, default=newEncoder)
+    return rule_data, 200
+
+
+@app.route('/rulesappcloudready/<name>', methods=['PUT'])
+def update_rule(name):
+    new_data = json.loads(request.data)
+    print(new_data)
+    complexity = new_data["complexity"]
+    availability = new_data["availability"]
+    criticity = new_data["criticity"]
+    mongo.db.rulesappcloudready.update_one({"name": name},
+                                           {'$set': {"complexity": complexity,
+                                                     "availability": availability, "criticity": criticity}})
+    return 'ok'
+
+
+@app.route('/rulesappcloudready/<name>', methods=['DELETE'])
+def delete_rule(name):
+    mongo.db.rulesappcloudready.delete_one({"name": name})
+    return 'Ok', 200
+
+
+""" END RULESAPPCLOUDREADY SECTION"""
 
 if __name__ == '__main__':
     app.run()
