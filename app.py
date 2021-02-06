@@ -157,7 +157,8 @@ def get_project(project_name):
 @app.route('/projects', methods=['POST'])
 def set_project():
     project_form = json.loads(request.data)
-    mongo.db.projects.insert_one(project_form)
+    complexity_rate(project_form)
+    #mongo.db.projects.insert_one(project_form)
     return 'ok', 200
 
 
