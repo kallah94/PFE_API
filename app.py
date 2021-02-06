@@ -4,6 +4,7 @@ from flask import Flask, json, jsonify, request
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required
 from flask_bcrypt import Bcrypt
 from flask_pymongo import PyMongo
+from bson import json_util
 
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
@@ -43,9 +44,8 @@ def login():
 
 @app.route('/users', methods=['GET'])
 def get_users():
-    user_data = list(mongo.db.users.find())
-    user_data = json.dumps(user_data, default=newEncoder)
-    return user_data, 200
+    user_data = [doc for doc in mongo.db.users.find({})]
+    return json_util.dumps({"users": user_data}), 200
 
 
 """ BEGIN CRITERES CRUD SECTION """
@@ -54,9 +54,8 @@ def get_users():
 @app.route('/criteres', methods=['GET'])
 # @jwt_required
 def get_criteres():
-    data = list(mongo.db.criteres.find())
-    data = json.dumps(data, default=newEncoder)
-    return data, 200
+    data = [doc for doc in mongo.db.criteres.find({})]
+    return json_util.dumps({"criteres": data}), 200
 
 
 @app.route('/criteres', methods=['POST'])
@@ -71,8 +70,7 @@ def set_critere():
 @app.route('/criteres/<name>', methods=['GET'])
 def get_critere(name):
     critere = mongo.db.criteres.find_one({"name": name})
-    critere = json.dumps(critere, default=newEncoder)
-    return critere, 200
+    return json_util.dumps({"critere": critere}), 200
 
 
 @app.route('/criteres/<name>', methods=['PUT'])
@@ -110,22 +108,19 @@ def set_ruleappcloudready():
 
 @app.route('/rulesappcloudready', methods=['GET'])
 def get_rulesappcloudreay():
-    data = list(mongo.db.rulesappcloudready.find())
-    data = json.dumps(data, default=newEncoder)
-    return data, 200
+    data = [doc for doc in mongo.db.rulesappcloudready.find({})]
+    return json_util.dumps({"rulesappcloudready": data}), 200
 
 
 @app.route('/rulesappcloudready/<name>', methods=['GET'])
 def get_rule(name):
     rule_data = mongo.db.rulesappcloudready.find_one({"name": name})
-    rule_data = json.dumps(rule_data, default=newEncoder)
-    return rule_data, 200
+    return json_util.dumps({"ruleappcloudready": rule_data}), 200
 
 
 @app.route('/rulesappcloudready/<name>', methods=['PUT'])
 def update_rule(name):
     new_data = json.loads(request.data)
-    print(new_data)
     complexity = new_data["complexity"]
     availability = new_data["availability"]
     criticity = new_data["criticity"]
@@ -148,15 +143,14 @@ def delete_rule(name):
 
 @app.route('/projects', methods=['GET'])
 def get_projects():
-    projects = mongo.db.projects.find()
-    projects = json.dumps(projects, default=newEncoder)
-    return projects, 200
+    projects = [doc for doc in mongo.db.projects.find({})]
+    return json_util.dumps({'projects': projects}), 200
 
 
 @app.route('/projects/<project_name>', methods=['GET'])
 def get_project(project_name):
     project = mongo.db.projects.find_one({"projectName": project_name})
-    project = json.dumps(project, default=newEncoder)
+    project = json_util.dumps({'project': project})
     return project, 200
 
 
@@ -167,10 +161,32 @@ def set_project():
     return 'ok', 200
 
 
-@app.route('/projects/<project_name>', methods=['PUT'])
-def update_project(project_name):
-    mongo.db.projects.update_one({"projectName": project_name}, {
-        '$set': {}
+@app.route('/projects/<name>', methods=['PUT'])
+def update_project(name):
+    new_data = json.loads(request.data)
+    application_type = new_data["applicationType"]
+    dependencies = new_data["dependencies"]
+    sla = new_data["SLA"]
+    environment = new_data["environment"]
+    data_size = new_data["dataSize"]
+    connected_applications = new_data["connectedApplications"]
+    tech_requirements = new_data["techRequirements"]
+    cost_estimation = new_data["costEstimation"]
+    cpu = new_data["cpu"]
+    disk = new_data["disk"]
+    memory = new_data["memory"]
+    number_of_vm = new_data["numberOfVm"]
+    os_image = new_data["osImage"]
+    os_type = new_data["osType"]
+    mongo.db.projects.update_one({"projectName": name}, {
+        '$set': {
+            "applicationType": application_type, "dependencies": dependencies,
+            "SLA": sla, "environment": environment, "dataSize": data_size,
+            "connectedApplications": connected_applications,
+            "techRequirements": tech_requirements, "costEstimation": cost_estimation,
+            "cpu": cpu, "disk": disk, "memory": memory, "numberOfVm": number_of_vm,
+            "osImage": os_image, "osType": os_type
+        }
     })
     return 'ok', 200
 
