@@ -1,6 +1,6 @@
 import datetime
 from functions import *
-from flask import Flask, json, jsonify, request
+from flask import Flask, request, redirect, url_for
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required
 from flask_bcrypt import Bcrypt
 from flask_pymongo import PyMongo
@@ -19,7 +19,7 @@ mongo = PyMongo(app)
 
 @app.route('/register', methods=['POST'])
 def register():
-    user_data = json.loads(request.data)
+    user_data = json_util.loads(request.data)
     username = user_data['username']
     password = user_data['password']
     hashed_password = Bcrypt.generate_password_hash(Bcrypt, password)
@@ -29,7 +29,7 @@ def register():
 
 @app.route('/login', methods=['POST'])
 def login():
-    data = json.loads(request.data)
+    data = json_util.loads(request.data)
     username = data['username']
     password = data['password']
     hashed = mongo.db.users.find_one({"username": username})['password']
@@ -61,7 +61,7 @@ def get_criteres():
 @app.route('/criteres', methods=['POST'])
 # @jwt_required
 def set_critere():
-    data = json.loads(request.data)
+    data = json_util.loads(request.data)
     print(data)
     mongo.db.criteres.insert_one(data)
     return 'Ok', 200
@@ -75,7 +75,7 @@ def get_critere(name):
 
 @app.route('/criteres/<name>', methods=['PUT'])
 def update_critere(name):
-    new_data = json.loads(request.data)
+    new_data = json_util.loads(request.data)
     vlrate = new_data["vlrate"]
     lrate = new_data["lrate"]
     mrate = new_data["mrate"]
@@ -100,7 +100,7 @@ def delete_critere(name):
 
 @app.route('/rulesappcloudready', methods=['POST'])
 def set_ruleappcloudready():
-    data = json.loads(request.data)
+    data = json_util.loads(request.data)
     print(data)
     mongo.db.rulesappcloudready.insert_one(data)
     return 'ok', 200
@@ -120,7 +120,7 @@ def get_rule(name):
 
 @app.route('/rulesappcloudready/<name>', methods=['PUT'])
 def update_rule(name):
-    new_data = json.loads(request.data)
+    new_data = json_util.loads(request.data)
     complexity = new_data["complexity"]
     availability = new_data["availability"]
     criticity = new_data["criticity"]
@@ -156,15 +156,29 @@ def get_project(project_name):
 
 @app.route('/projects', methods=['POST'])
 def set_project():
-    project_form = json.loads(request.data)
-    complexity_rate(project_form)
-    #mongo.db.projects.insert_one(project_form)
-    return 'ok', 200
+    data = request.data
+    project_form = json_util.loads(data)
+    try:
+        mongo.db.projects.insert_one(project_form)
+        return redirect(url_for('.conseil', project=data))
+    except:
+        return {"error": "An error occurr project can't be store to the database"}, 500
+
+
+@app.route('/projects/conseils', methods=['GET'])
+def conseil():
+    project = json_util.loads(request.args["project"])
+    rule = mongo.db.rulesappcloudready.find_one({"name": "rule1"})
+    data = setup(project)
+    vector_rule = [rule["complexity"], rule["availability"], rule["criticity"]]
+    vector = [data["complexity"], data["availability"], data["criticity"]]
+
+    return {"score": compare_vectors(vector_rule, vector)}, 200
 
 
 @app.route('/projects/<name>', methods=['PUT'])
 def update_project(name):
-    new_data = json.loads(request.data)
+    new_data = json_util.loads(request.data)
     application_type = new_data["applicationType"]
     dependencies = new_data["dependencies"]
     sla = new_data["SLA"]
