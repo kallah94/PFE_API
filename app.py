@@ -136,7 +136,7 @@ def delete_rule(name):
     return 'Ok', 200
 
 
-""" END RULESAPPCLOUDREADY SECTION"""
+""" END RULESAPPCLOUDREADY SECTION """
 
 """ BEGIN PROJECT CRUD """
 
@@ -173,7 +173,7 @@ def conseil():
     vector_rule = [rule["complexity"], rule["availability"], rule["criticity"]]
     vector = [data["complexity"], data["availability"], data["criticity"]]
 
-    return {"score": compare_vectors(vector_rule, vector)}, 200
+    return {"score": compare_vectors(vector_rule, vector), "Providers": ["GCP", "AWS", "AZUR"]}, 200
 
 
 @app.route('/projects/<name>', methods=['PUT'])

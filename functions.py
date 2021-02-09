@@ -5,11 +5,12 @@ def setup(data):
     global application_type
     global len_dep
     global len_connected_app
-    global  number_of_vm
+    global number_of_vm
     global sla
     global environment
     global data_size
     global cost_estimation
+
     try:
         application_type = data["applicationType"]
     except KeyError:
