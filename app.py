@@ -17,6 +17,11 @@ app.config["MONGO_URI"] = "mongodb://localhost:27017/APIBase"
 mongo = PyMongo(app)
 
 
+@app.route('/')
+def hello():
+    return {"hello": "Hello world !!!"}
+
+
 @app.route('/register', methods=['POST'])
 def register():
     user_data = json_util.loads(request.data)
