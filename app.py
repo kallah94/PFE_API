@@ -13,7 +13,9 @@ app.config.from_envvar('ENV_FILE_LOCATION')
 app.config['SECRET_KEY'] = 'secret-key-kallah'
 app_context = app.app_context()
 app_context.push()
-app.config["MONGO_URI"] = "mongodb://localhost:27017/APIBase"
+# app.config["MONGO_URI"] = "mongodb://localhost:27017/APIBase"
+app.config["MONGO_URI"] = "mongodb+srv://Amet:amet@clusterprovisionning.3p11m.mongodb.net/vmDatabase?retryWrites=true" \
+                          "&w=majority"
 mongo = PyMongo(app)
 
 
@@ -158,7 +160,7 @@ def get_project(project_name):
     project = json_util.dumps({'project': project})
     return project, 200
 
-
+"""
 @app.route('/projects', methods=['POST'])
 def set_project():
     data = request.data
@@ -168,6 +170,7 @@ def set_project():
         return redirect(url_for('.conseil', project=data))
     except:
         return {"error": "An error occurr project can't be store to the database"}, 500
+"""
 
 
 @app.route('/projects/conseils', methods=['GET'])
