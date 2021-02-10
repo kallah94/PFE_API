@@ -173,9 +173,9 @@ def set_project():
 """
 
 
-@app.route('/projects/conseils', methods=['GET'])
+@app.route('/projects', methods=['POST'])
 def conseil():
-    project = json_util.loads(request.args["project"])
+    project = json_util.loads(request.data)
     rule = mongo.db.rulesappcloudready.find_one({"name": "rule1"})
     data = setup(project)
     vector_rule = [rule["complexity"], rule["availability"], rule["criticity"]]
