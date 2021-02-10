@@ -7,12 +7,6 @@ node('diaf-moussa-api-node') {
         }
     }
     
-    stage('build') {
-        dir('/home/fmoussa/PFE_API') {
-            sh "python -m pip install -r requirements.txt"
-        }
-    }
-    
     stage('deploy') {
         sh "sudo systemctl restart api"
         sh "sudo systemctl status api"
