@@ -182,7 +182,7 @@ def conseil():
     vector_rule = [rule["complexity"], rule["availability"], rule["criticity"]]
     vector = [data["complexity"], data["availability"], data["criticity"]]
 
-    return {"score": compare_vectors(vector_rule, vector), "Providers": ["GCP", "AWS", "AZUR"]}, 200
+    return {"score": compare_vectors(vector_rule, vector), "providers": ["GCP", "AWS", "AZUR"]}, 200
 
 
 @app.route('/projects/<name>', methods=['PUT'])

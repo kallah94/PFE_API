@@ -120,5 +120,4 @@ def compare_vectors(vector_rule, vector_project):
     vect1 = np.array(vector_rule)
     vect2 = np.array(vector_project)
     diff_cost = np.dot(vect2, vect1) / (np.linalg.norm(vect2) * np.linalg.norm(vect1))
-    result = np.abs(diff_cost)
-    return result
+    return diff_cost
