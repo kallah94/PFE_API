@@ -55,7 +55,7 @@ def complexity_rate():
     the migration or the deployment in the cloud may be a little bit more complex}
     """
     rate = 0
-    if str.lower(application_type) == 'micro':
+    if application_type == 'micro':
         rate += 5
     else:
         rate += 12
@@ -99,11 +99,11 @@ def availability_rate():
 
 def criticity_rate():
     rate = 0
-    if str.lower(environment) == 'dev':
+    if environment == 'dev':
         rate += 2
-    if str.lower(environment) == 'test':
+    if environment == 'test':
         rate += 3
-    if str.lower(environment) == 'prod':
+    if environment == 'prod':
         rate += 15
     if len_connected_app == 0:
         pass
