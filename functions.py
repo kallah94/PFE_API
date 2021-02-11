@@ -2,7 +2,7 @@ import numpy as np
 
 
 def setup(data):
-    global application_type
+    global project_architecture
     global len_dep
     global len_connected_app
     global number_of_vm
@@ -12,7 +12,7 @@ def setup(data):
     global cost_estimation
 
     try:
-        application_type = data["applicationType"]
+        project_architecture = data["projectArchitecture"]
     except KeyError:
         application_type = None
 
@@ -55,7 +55,7 @@ def complexity_rate():
     the migration or the deployment in the cloud may be a little bit more complex}
     """
     rate = 0
-    if application_type == 'micro':
+    if project_architecture == 'micro':
         rate += 5
     else:
         rate += 12
@@ -89,10 +89,8 @@ def availability_rate():
     if sla == 2:
         avaibability_rate += 20
     if sla == 4:
-        avaibability_rate += 15
-    if sla == 8:
         avaibability_rate += 10
-    if sla == 12:
+    if sla == 8:
         avaibability_rate += 5
     return avaibability_rate
 
