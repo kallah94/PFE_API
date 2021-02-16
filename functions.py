@@ -59,10 +59,8 @@ def complexity_rate():
         rate += 5
     else:
         rate += 12
-    if len_dep == 0:
+    if len_dep <= 0:
         pass
-    elif len_dep <= 5:
-        rate += 3
     elif len_dep <= 10:
         rate += 8
     else:
@@ -70,9 +68,9 @@ def complexity_rate():
     if len_connected_app == 0:
         pass
     elif len_connected_app <= 4:
-        rate += 3
+        rate += 6
     elif len_connected_app <= 10:
-        rate += 9
+        rate += 15
     else:
         rate += 15
     if number_of_vm <= 3:
@@ -98,9 +96,9 @@ def availability_rate():
 def criticity_rate():
     rate = 0
     if environment == 'dev':
-        rate += 2
+        pass
     if environment == 'test':
-        rate += 3
+        pass
     if environment == 'prod':
         rate += 15
     if len_connected_app == 0:
