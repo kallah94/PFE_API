@@ -59,7 +59,7 @@ def complexity_rate():
         rate += 5
     else:
         rate += 12
-    if len_dep <= 0:
+    if len_dep <= 4:
         pass
     elif len_dep <= 10:
         rate += 8
