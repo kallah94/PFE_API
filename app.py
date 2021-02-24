@@ -13,9 +13,10 @@ app.config.from_envvar('ENV_FILE_LOCATION')
 app.config['SECRET_KEY'] = 'secret-key-kallah'
 app_context = app.app_context()
 app_context.push()
-app.config["MONGO_URI"] = "mongodb://localhost:27017/APIBase"
-#app.config["MONGO_URI"] = "mongodb+srv://Amet:amet@clusterprovisionning.3p11m.mongodb.net/vmDatabase?retryWrites=true" \
- #                         "&w=majority"
+app.config["MONGO_URI"] = "mongodb://localhost:27017/APIBASE"
+# app.config["MONGO_URI"] = "mongodb+srv://Amet:amet@clusterprovisionning.3p11m.mongodb.net/vmDatabase?retryWrites=true" \
+#                         "&w=majority"
+
 mongo = PyMongo(app)
 
 
@@ -223,6 +224,67 @@ def delete_project(project_name):
 
 """ END PROJECT CRUD"""
 
+""" CLOUD PROVIDERS CARACTERISTICS"""
+
+
+@app.route('/providers', methods=['POST'])
+def add_gcp_caracteristics():
+    new_provider = json_util.loads(request.data)
+    set_provider = new_provider['set_provider']
+    fiabilité = new_provider['fiabilite']
+    flexibilte = new_provider['flexibilite']
+    maturite = new_provider['maturite']
+    securite_donnees = new_provider['data_security']
+    localisation_geographique = new_provider['localisation_geographique']
+    tarification = new_provider['tarification']
+    mongo.db.providers.insert_one({"set_provider": set_provider,
+                                   "fiabilité": fiabilité,
+                                   "flexibilite": flexibilte,
+                                   "maturite": maturite,
+                                   "securite_donnees": securite_donnees,
+                                   "localisation_geographique": localisation_geographique,
+                                   "tarification": tarification
+                                   })
+    return 'ok', 200
+
+
+@app.route('/providers', methods=['GET'])
+def get_all_providers_caracteristics():
+    providers_carateristics = mongo.db.providers.find()
+    result = json_util.dumps(providers_carateristics)
+    return result
+
+
+@app.route('/providers/<nom_provider>', methods=['GET'])
+def get_one_provider(nom_provider):
+    provider_caracteristics = mongo.db.providers.find_one({'nom_provider': nom_provider})
+    return provider_caracteristics
+
+
+@app.route('/providers/<nom_provider>', methods=['PUT'])
+def update_provider_by_name(nom_provider):
+    fiabilité = request.json['fiabilite']
+    flexibilte = request.json['flexibilite']
+    maturite = request.json['maturite']
+    securite_donnees = request.json['data_security']
+    localisation_geographique = request.json['localisation_geographique']
+    tarification = request.json['tarification']
+    mongo.db.providers.update_one({'set_provider': nom_provider}, {'$set': {"fiabilité": fiabilité,
+                                                                            "flexibilite": flexibilte,
+                                                                            "maturite": maturite,
+                                                                            "securite_donnees": securite_donnees,
+                                                                            "localisation_geographique": localisation_geographique,
+                                                                            "tarification": tarification
+                                                                            }
+                                                                   })
+    return 'ok', 200
+
+
+@app.route('/providers/<nom_provider>', methods=['DELETE'])
+def delete_provider_by_name(nom_provider):
+    mongo.db.providers.delete_one({'set_provider': nom_provider})
+    return nom_provider + 'deleted with success'
+
 """ BEGIN CLOUD PROVIDER CRITERIA BEHAVIOR """
 
 
@@ -246,7 +308,7 @@ def update_criterion(criterion_name):
     behavior = new_data['behavior']
     mongo.db.criteria.update_one({"name": criterion_name}, {
         '$set': {
-           "behavior": behavior
+            "behavior": behavior
         }
     })
     return 'Ok', 200
@@ -262,7 +324,6 @@ def get_criterion(criterion_name):
 def delete_criterion(criterion_name):
     mongo.db.criteria.delete_one({"name": criterion_name})
     return 'ok', 200
-
 
 """ GCP CARACTERISTICS"""
 
