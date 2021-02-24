@@ -4,7 +4,7 @@ from flask import Flask, request, redirect, url_for
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required
 from flask_bcrypt import Bcrypt
 from flask_pymongo import PyMongo
-from bson import json_util
+from bson import json_util, ObjectId
 
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
@@ -13,9 +13,9 @@ app.config.from_envvar('ENV_FILE_LOCATION')
 app.config['SECRET_KEY'] = 'secret-key-kallah'
 app_context = app.app_context()
 app_context.push()
-# app.config["MONGO_URI"] = "mongodb://localhost:27017/APIBase"
-app.config["MONGO_URI"] = "mongodb+srv://Amet:amet@clusterprovisionning.3p11m.mongodb.net/vmDatabase?retryWrites=true" \
-                          "&w=majority"
+app.config["MONGO_URI"] = "mongodb://localhost:27017/APIBASE"
+# app.config["MONGO_URI"] = "mongodb+srv://Amet:amet@clusterprovisionning.3p11m.mongodb.net/vmDatabase?retryWrites=true" \
+# "&w=majority"
 mongo = PyMongo(app)
 
 
@@ -160,6 +160,7 @@ def get_project(project_name):
     project = json_util.dumps({'project': project})
     return project, 200
 
+
 """
 @app.route('/projects', methods=['POST'])
 def set_project():
@@ -222,6 +223,183 @@ def delete_project(project_name):
 
 
 """ END PROJECT CRUD"""
+
+""" GCP CARACTERISTICS"""
+
+
+@app.route('/gcp', methods=['POST'])
+def add_gcp_caracteristics():
+    fiabilité = request.json['fiabilite']
+    flexibilte = request.json['flexibilite']
+    maturite = request.json['maturite']
+    securite_donnees = request.json['data_security']
+    localisation_geographique = request.json['localisation_geographique']
+    tarification = request.json['tarification']
+    mongo.db.gcp.insert_one({"fiabilité": fiabilité,
+                             "flexibilite": flexibilte,
+                             "maturite": maturite,
+                             "securite_donnees": securite_donnees,
+                             "localisation_geographique": localisation_geographique,
+                             "tarification": tarification
+                             })
+    return 'ok', 200
+
+
+@app.route('/gcp', methods=['GET'])
+def get_gcp_caracteristics():
+    gcp_carateristics = mongo.db.gcp.find()
+    result = json_util.dumps(gcp_carateristics)
+    return result
+
+
+@app.route('/gcp/<id>', methods=['GET'])
+def get_one():
+    gcp_caracteristics = mongo.db.gcp.find_one({'_id': ObjectId(id)})
+    return gcp_caracteristics
+
+
+@app.route('/gcp/<id>', methods=['PUT'])
+def update_gcp_caracteristics(id):
+    fiabilité = request.json['fiabilite']
+    flexibilte = request.json['flexibilite']
+    maturite = request.json['maturite']
+    securite_donnees = request.json['data_security']
+    localisation_geographique = request.json['localisation_geographique']
+    tarification = request.json['tarification']
+    mongo.db.gcp.update_one({'_id': ObjectId(id)}, {'$set': {"fiabilité": fiabilité,
+                                                             "flexibilite": flexibilte,
+                                                             "maturite": maturite,
+                                                             "securite_donnees": securite_donnees,
+                                                             "localisation_geographique": localisation_geographique,
+                                                             "tarification": tarification
+                                                             }
+                                                    })
+    return 'ok', 200
+
+
+@app.route('/gcp/<id>', methods=['DELETE'])
+def delete_gcp_caracteristics(id):
+    mongo.db.gcp.delete_one({'_id': ObjectId(id)})
+    return id + 'deleted with success'
+
+
+""" AZURE CARACTERISTICS"""
+
+
+@app.route('/azure', methods=['POST'])
+def add_azure_caracteristics():
+    fiabilité = request.json['fiabilite']
+    flexibilte = request.json['flexibilite']
+    maturite = request.json['maturite']
+    securite_donnees = request.json['data_security']
+    localisation_geographique = request.json['localisation_geographique']
+    tarification = request.json['tarification']
+    mongo.db.azure.insert_one({"fiabilité": fiabilité,
+                               "flexibilite": flexibilte,
+                               "maturite": maturite,
+                               "securite_donnees": securite_donnees,
+                               "localisation_geographique": localisation_geographique,
+                               "tarification": tarification
+                               })
+    return 'ok', 200
+
+
+@app.route('/azure', methods=['GET'])
+def get_azure_caracteristics():
+    azure_carateristics = mongo.db.azure.find()
+    result = json_util.dumps(azure_carateristics)
+    return result
+
+
+@app.route('/azure/<id>', methods=['GET'])
+def get_one():
+    azure_caracteristics = mongo.db.azure.find_one({'_id': ObjectId(id)})
+    return azure_caracteristics
+
+
+@app.route('/azure/<id>', methods=['PUT'])
+def update_azure_caracteristics(id):
+    fiabilité = request.json['fiabilite']
+    flexibilte = request.json['flexibilite']
+    maturite = request.json['maturite']
+    securite_donnees = request.json['data_security']
+    localisation_geographique = request.json['localisation_geographique']
+    tarification = request.json['tarification']
+    mongo.db.azure.update_one({'_id': ObjectId(id)}, {'$set': {"fiabilité": fiabilité,
+                                                               "flexibilite": flexibilte,
+                                                               "maturite": maturite,
+                                                               "securite_donnees": securite_donnees,
+                                                               "localisation_geographique": localisation_geographique,
+                                                               "tarification": tarification
+                                                               }
+                                                      })
+    return 'ok', 200
+
+
+@app.route('/azure/<id>', methods=['DELETE'])
+def delete_azure_caracteristics(id):
+    mongo.db.azure.delete_one({'_id': ObjectId(id)})
+    return id + 'deleted with success'
+
+
+""" AMAZONE CARACTERISTICS"""
+
+
+@app.route('/amazone', methods=['POST'])
+def add_amazone_caracteristics():
+    fiabilité = request.json['fiabilite']
+    flexibilte = request.json['flexibilite']
+    maturite = request.json['maturite']
+    securite_donnees = request.json['data_security']
+    localisation_geographique = request.json['localisation_geographique']
+    tarification = request.json['tarification']
+    mongo.db.amazone.insert_one({"fiabilité": fiabilité,
+                                 "flexibilite": flexibilte,
+                                 "maturite": maturite,
+                                 "securite_donnees": securite_donnees,
+                                 "localisation_geographique": localisation_geographique,
+                                 "tarification": tarification
+                                 })
+    return 'ok', 200
+
+
+@app.route('/amazone', methods=['GET'])
+def get_amazone_caracteristics():
+    gcp_carateristics = mongo.db.gcp.find()
+    result = json_util.dumps(gcp_carateristics)
+    return result
+
+
+@app.route('/amazone/<id>', methods=['GET'])
+def get_one():
+    amazone_caracteristics = mongo.db.amazone.find_one({'_id': ObjectId(id)})
+    return amazone_caracteristics
+
+
+@app.route('/amazone/<id>', methods=['PUT'])
+def update_amazone_caracteristics(id):
+    fiabilité = request.json['fiabilite']
+    flexibilte = request.json['flexibilite']
+    maturite = request.json['maturite']
+    securite_donnees = request.json['data_security']
+    localisation_geographique = request.json['localisation_geographique']
+    tarification = request.json['tarification']
+    mongo.db.amazone.update_one({'_id': ObjectId(id)}, {'$set': {"fiabilité": fiabilité,
+                                                                 "flexibilite": flexibilte,
+                                                                 "maturite": maturite,
+                                                                 "securite_donnees": securite_donnees,
+                                                                 "localisation_geographique": localisation_geographique,
+                                                                 "tarification": tarification
+                                                                 }
+                                                        })
+    return 'ok', 200
+
+
+@app.route('/amazone/<id>', methods=['DELETE'])
+def delete_amazone_caracteristics(id):
+    mongo.db.amazone.delete_one({'_id': ObjectId(id)})
+    return id + 'deleted with success'
+
 
 if __name__ == '__main__':
     app.run()
