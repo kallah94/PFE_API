@@ -13,9 +13,9 @@ app.config.from_envvar('ENV_FILE_LOCATION')
 app.config['SECRET_KEY'] = 'secret-key-kallah'
 app_context = app.app_context()
 app_context.push()
-app.config["MONGO_URI"] = "mongodb://localhost:27017/APIBASE"
-# app.config["MONGO_URI"] = "mongodb+srv://Amet:amet@clusterprovisionning.3p11m.mongodb.net/vmDatabase?retryWrites=true" \
-#                         "&w=majority"
+app.config["MONGO_URI"] = "mongodb://localhost:27017/APIBase"
+# app.config["MONGO_URI"] = "mongodb+srv://Amet:amet@clusterprovisionning.3p11m.mongodb.net/vmDatabase?retryWrites
+# =true" \ "&w=majority"
 
 mongo = PyMongo(app)
 
@@ -162,19 +162,6 @@ def get_project(project_name):
     return project, 200
 
 
-"""
-@app.route('/projects', methods=['POST'])
-def set_project():
-    data = request.data
-    project_form = json_util.loads(data)
-    try:
-        mongo.db.projects.insert_one(project_form)
-        return redirect(url_for('.conseil', project=data))
-    except:
-        return {"error": "An error occurr project can't be store to the database"}, 500
-"""
-
-
 @app.route('/projects', methods=['POST'])
 def conseil():
     project = json_util.loads(request.data)
@@ -224,67 +211,6 @@ def delete_project(project_name):
 
 """ END PROJECT CRUD"""
 
-""" CLOUD PROVIDERS CARACTERISTICS"""
-
-
-@app.route('/providers', methods=['POST'])
-def add_gcp_caracteristics():
-    new_provider = json_util.loads(request.data)
-    set_provider = new_provider['set_provider']
-    fiabilité = new_provider['fiabilite']
-    flexibilte = new_provider['flexibilite']
-    maturite = new_provider['maturite']
-    securite_donnees = new_provider['data_security']
-    localisation_geographique = new_provider['localisation_geographique']
-    tarification = new_provider['tarification']
-    mongo.db.providers.insert_one({"set_provider": set_provider,
-                                   "fiabilité": fiabilité,
-                                   "flexibilite": flexibilte,
-                                   "maturite": maturite,
-                                   "securite_donnees": securite_donnees,
-                                   "localisation_geographique": localisation_geographique,
-                                   "tarification": tarification
-                                   })
-    return 'ok', 200
-
-
-@app.route('/providers', methods=['GET'])
-def get_all_providers_caracteristics():
-    providers_carateristics = mongo.db.providers.find()
-    result = json_util.dumps(providers_carateristics)
-    return result
-
-
-@app.route('/providers/<nom_provider>', methods=['GET'])
-def get_one_provider(nom_provider):
-    provider_caracteristics = mongo.db.providers.find_one({'nom_provider': nom_provider})
-    return provider_caracteristics
-
-
-@app.route('/providers/<nom_provider>', methods=['PUT'])
-def update_provider_by_name(nom_provider):
-    fiabilité = request.json['fiabilite']
-    flexibilte = request.json['flexibilite']
-    maturite = request.json['maturite']
-    securite_donnees = request.json['data_security']
-    localisation_geographique = request.json['localisation_geographique']
-    tarification = request.json['tarification']
-    mongo.db.providers.update_one({'set_provider': nom_provider}, {'$set': {"fiabilité": fiabilité,
-                                                                            "flexibilite": flexibilte,
-                                                                            "maturite": maturite,
-                                                                            "securite_donnees": securite_donnees,
-                                                                            "localisation_geographique": localisation_geographique,
-                                                                            "tarification": tarification
-                                                                            }
-                                                                   })
-    return 'ok', 200
-
-
-@app.route('/providers/<nom_provider>', methods=['DELETE'])
-def delete_provider_by_name(nom_provider):
-    mongo.db.providers.delete_one({'set_provider': nom_provider})
-    return nom_provider + 'deleted with success'
-
 """ BEGIN CLOUD PROVIDER CRITERIA BEHAVIOR """
 
 
@@ -325,181 +251,90 @@ def delete_criterion(criterion_name):
     mongo.db.criteria.delete_one({"name": criterion_name})
     return 'ok', 200
 
-""" GCP CARACTERISTICS"""
 
-
-@app.route('/gcp', methods=['POST'])
-def add_gcp_caracteristics():
-    fiabilité = request.json['fiabilite']
-    flexibilte = request.json['flexibilite']
-    maturite = request.json['maturite']
-    securite_donnees = request.json['data_security']
-    localisation_geographique = request.json['localisation_geographique']
-    tarification = request.json['tarification']
-    mongo.db.gcp.insert_one({"fiabilité": fiabilité,
-                             "flexibilite": flexibilte,
-                             "maturite": maturite,
-                             "securite_donnees": securite_donnees,
-                             "localisation_geographique": localisation_geographique,
-                             "tarification": tarification
-                             })
+@app.route('/providers', methods=['POST'])
+def set_provider():
+    new_provider = json_util.loads(request.data)
+    mongo.db.providers.insert_one(new_provider)
     return 'ok', 200
 
 
-@app.route('/gcp', methods=['GET'])
-def get_gcp_caracteristics():
-    gcp_carateristics = mongo.db.gcp.find()
-    result = json_util.dumps(gcp_carateristics)
-    return result
+@app.route('/providers', methods=['GET'])
+def get_providers():
+    providers = [doc for doc in mongo.db.providers.find({})]
+    return json_util.dumps({'providers': providers}), 200
 
 
-@app.route('/gcp/<id>', methods=['GET'])
-def get_one():
-    gcp_caracteristics = mongo.db.gcp.find_one({'_id': ObjectId(id)})
-    return gcp_caracteristics
+@app.route('/providers/<provider_name>', methods=['GET'])
+def get_provider(provider_name):
+    provider = mongo.db.providers.find_one({'name': provider_name})
+    return json_util.dumps({'provider': provider}), 200
 
 
-@app.route('/gcp/<id>', methods=['PUT'])
-def update_gcp_caracteristics(id):
-    fiabilité = request.json['fiabilite']
-    flexibilte = request.json['flexibilite']
-    maturite = request.json['maturite']
-    securite_donnees = request.json['data_security']
-    localisation_geographique = request.json['localisation_geographique']
-    tarification = request.json['tarification']
-    mongo.db.gcp.update_one({'_id': ObjectId(id)}, {'$set': {"fiabilité": fiabilité,
-                                                             "flexibilite": flexibilte,
-                                                             "maturite": maturite,
-                                                             "securite_donnees": securite_donnees,
-                                                             "localisation_geographique": localisation_geographique,
-                                                             "tarification": tarification
-                                                             }
-                                                    })
+@app.route('/providers/<provider_name>', methods=['PUT'])
+def update_provider(provider_name):
+    reliability = request.json['reliability']
+    flexibility = request.json['flexibility']
+    maturity = request.json['maturity']
+    data_security = request.json['data_security']
+    geolocation = request.json['geolocation']
+    cost = request.json['cost']
+    mongo.db.providers.update_one({'name': provider_name}, {'$set': {"reliability": reliability,
+                                                                     "flexibility": flexibility,
+                                                                     "maturity": maturity,
+                                                                     "data_security": data_security,
+                                                                     "geolocation": geolocation,
+                                                                     "cost": cost
+                                                                     }
+                                                            })
     return 'ok', 200
 
 
-@app.route('/gcp/<id>', methods=['DELETE'])
-def delete_gcp_caracteristics(id):
-    mongo.db.gcp.delete_one({'_id': ObjectId(id)})
-    return id + 'deleted with success'
+@app.route('/providers/<nom_provider>', methods=['DELETE'])
+def delete_provider(nom_provider):
+    mongo.db.providers.delete_one({'set_provider': nom_provider})
+    return nom_provider + 'deleted with success'
 
 
-""" AZURE CARACTERISTICS"""
+""" BEGIN CLOUD PROVIDER CRITERIA BEHAVIOR """
 
 
-@app.route('/azure', methods=['POST'])
-def add_azure_caracteristics():
-    fiabilité = request.json['fiabilite']
-    flexibilite = request.json['flexibilite']
-    maturite = request.json['maturite']
-    securite_donnees = request.json['data_security']
-    localisation_geographique = request.json['localisation_geographique']
-    tarification = request.json['tarification']
-    mongo.db.azure.insert_one({"fiabilité": fiabilité,
-                               "flexibilite": flexibilite,
-                               "maturite": maturite,
-                               "securite_donnees": securite_donnees,
-                               "localisation_geographique": localisation_geographique,
-                               "tarification": tarification
-                               })
+@app.route("/providers/criteria", methods=['GET'])
+def get_criteria():
+    criteria = [doc for doc in mongo.db.criteria.find({})]
+    build_criteria_behavior_matrix(criteria)
+    return json_util.dumps({'criteria': criteria}), 200
+
+
+@app.route("/providers/criteria", methods=['POST'])
+def set_criterion():
+    criteria = json_util.loads(request.data)
+    mongo.db.criteria.insert_one(criteria)
+    return 'Ok', 200
+
+
+@app.route("/providers/criteria/<criterion_name>", methods=['PUT'])
+def update_criterion(criterion_name):
+    new_data = json_util.loads(request.data)
+    behavior = new_data['behavior']
+    mongo.db.criteria.update_one({"name": criterion_name}, {
+        '$set': {
+            "behavior": behavior
+        }
+    })
+    return 'Ok', 200
+
+
+@app.route("/providers/criteria/<criterion_name>", methods=['GET'])
+def get_criterion(criterion_name):
+    criterion = mongo.db.criteria.find_one({"name": criterion_name})
+    return json_util.dumps({'criterion': criterion}), 200
+
+
+@app.route('/providers/criteria/<criterion_name>', methods=['DELETE'])
+def delete_criterion(criterion_name):
+    mongo.db.criteria.delete_one({"name": criterion_name})
     return 'ok', 200
-
-
-@app.route('/azure', methods=['GET'])
-def get_azure_caracteristics():
-    azure_carateristics = mongo.db.azure.find()
-    result = json_util.dumps(azure_carateristics)
-    return result
-
-
-@app.route('/azure/<id>', methods=['GET'])
-def get_one():
-    azure_caracteristics = mongo.db.azure.find_one({'_id': ObjectId(id)})
-    return azure_caracteristics
-
-
-@app.route('/azure/<id>', methods=['PUT'])
-def update_azure_caracteristics(id):
-    fiabilité = request.json['fiabilite']
-    flexibilte = request.json['flexibilite']
-    maturite = request.json['maturite']
-    securite_donnees = request.json['data_security']
-    localisation_geographique = request.json['localisation_geographique']
-    tarification = request.json['tarification']
-    mongo.db.azure.update_one({'_id': ObjectId(id)}, {'$set': {"fiabilité": fiabilité,
-                                                               "flexibilite": flexibilte,
-                                                               "maturite": maturite,
-                                                               "securite_donnees": securite_donnees,
-                                                               "localisation_geographique": localisation_geographique,
-                                                               "tarification": tarification
-                                                               }
-                                                      })
-    return 'ok', 200
-
-
-@app.route('/azure/<id>', methods=['DELETE'])
-def delete_azure_caracteristics(id):
-    mongo.db.azure.delete_one({'_id': ObjectId(id)})
-    return id + 'deleted with success'
-
-
-""" AMAZONE CARACTERISTICS"""
-
-
-@app.route('/amazone', methods=['POST'])
-def add_amazone_caracteristics():
-    fiabilité = request.json['fiabilite']
-    flexibilte = request.json['flexibilite']
-    maturite = request.json['maturite']
-    securite_donnees = request.json['data_security']
-    localisation_geographique = request.json['localisation_geographique']
-    tarification = request.json['tarification']
-    mongo.db.amazone.insert_one({"fiabilité": fiabilité,
-                                 "flexibilite": flexibilte,
-                                 "maturite": maturite,
-                                 "securite_donnees": securite_donnees,
-                                 "localisation_geographique": localisation_geographique,
-                                 "tarification": tarification
-                                 })
-    return 'ok', 200
-
-
-@app.route('/amazone', methods=['GET'])
-def get_amazone_caracteristics():
-    gcp_carateristics = mongo.db.gcp.find()
-    result = json_util.dumps(gcp_carateristics)
-    return result
-
-
-@app.route('/amazone/<id>', methods=['GET'])
-def get_one():
-    amazone_caracteristics = mongo.db.amazone.find_one({'_id': ObjectId(id)})
-    return amazone_caracteristics
-
-
-@app.route('/amazone/<id>', methods=['PUT'])
-def update_amazone_caracteristics(id):
-    fiabilité = request.json['fiabilite']
-    flexibilte = request.json['flexibilite']
-    maturite = request.json['maturite']
-    securite_donnees = request.json['data_security']
-    localisation_geographique = request.json['localisation_geographique']
-    tarification = request.json['tarification']
-    mongo.db.amazone.update_one({'_id': ObjectId(id)}, {'$set': {"fiabilité": fiabilité,
-                                                                 "flexibilite": flexibilte,
-                                                                 "maturite": maturite,
-                                                                 "securite_donnees": securite_donnees,
-                                                                 "localisation_geographique": localisation_geographique,
-                                                                 "tarification": tarification
-                                                                 }
-                                                        })
-    return 'ok', 200
-
-
-@app.route('/amazone/<id>', methods=['DELETE'])
-def delete_amazone_caracteristics(id):
-    mongo.db.amazone.delete_one({'_id': ObjectId(id)})
-    return id + 'deleted with success'
 
 
 if __name__ == '__main__':
