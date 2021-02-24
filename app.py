@@ -13,9 +13,9 @@ app.config.from_envvar('ENV_FILE_LOCATION')
 app.config['SECRET_KEY'] = 'secret-key-kallah'
 app_context = app.app_context()
 app_context.push()
-# app.config["MONGO_URI"] = "mongodb://localhost:27017/APIBase"
-app.config["MONGO_URI"] = "mongodb+srv://Amet:amet@clusterprovisionning.3p11m.mongodb.net/vmDatabase?retryWrites=true" \
-                          "&w=majority"
+app.config["MONGO_URI"] = "mongodb://localhost:27017/APIBase"
+#app.config["MONGO_URI"] = "mongodb+srv://Amet:amet@clusterprovisionning.3p11m.mongodb.net/vmDatabase?retryWrites=true" \
+ #                         "&w=majority"
 mongo = PyMongo(app)
 
 
@@ -176,12 +176,11 @@ def set_project():
 @app.route('/projects', methods=['POST'])
 def conseil():
     project = json_util.loads(request.data)
-    print(project["applicationType"])
     rule = mongo.db.rulesappcloudready.find_one({"name": "rule1"})
     data = setup(project)
+    criticity_bound(data["criticity"])
     vector_rule = [rule["complexity"], rule["availability"], rule["criticity"]]
     vector = [data["complexity"], data["availability"], data["criticity"]]
-
     return {"score": compare_vectors(vector_rule, vector), "providers": ["GCP", "AWS", "AZUR"]}, 200
 
 
@@ -222,6 +221,47 @@ def delete_project(project_name):
 
 
 """ END PROJECT CRUD"""
+
+""" BEGIN CLOUD PROVIDER CRITERIA BEHAVIOR """
+
+
+@app.route("/providers/criteria", methods=['GET'])
+def get_criteria():
+    criteria = [doc for doc in mongo.db.criteria.find({})]
+    build_criteria_behavior_matrix(criteria)
+    return json_util.dumps({'criteria': criteria}), 200
+
+
+@app.route("/providers/criteria", methods=['POST'])
+def set_criterion():
+    criteria = json_util.loads(request.data)
+    mongo.db.criteria.insert_one(criteria)
+    return 'Ok', 200
+
+
+@app.route("/providers/criteria/<criterion_name>", methods=['PUT'])
+def update_criterion(criterion_name):
+    new_data = json_util.loads(request.data)
+    behavior = new_data['behavior']
+    mongo.db.criteria.update_one({"name": criterion_name}, {
+        '$set': {
+           "behavior": behavior
+        }
+    })
+    return 'Ok', 200
+
+
+@app.route("/providers/criteria/<criterion_name>", methods=['GET'])
+def get_criterion(criterion_name):
+    criterion = mongo.db.criteria.find_one({"name": criterion_name})
+    return json_util.dumps({'criterion': criterion}), 200
+
+
+@app.route('/providers/criteria/<criterion_name>', methods=['DELETE'])
+def delete_criterion(criterion_name):
+    mongo.db.criteria.delete_one({"name": criterion_name})
+    return 'ok', 200
+
 
 if __name__ == '__main__':
     app.run()
