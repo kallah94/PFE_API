@@ -13,15 +13,10 @@ app.config.from_envvar('ENV_FILE_LOCATION')
 app.config['SECRET_KEY'] = 'secret-key-kallah'
 app_context = app.app_context()
 app_context.push()
-<<<<<<< HEAD
-app.config["MONGO_URI"] = "mongodb://localhost:27017/APIBASE"
-# app.config["MONGO_URI"] = "mongodb+srv://Amet:amet@clusterprovisionning.3p11m.mongodb.net/vmDatabase?retryWrites=true" \
-# "&w=majority"
-=======
+
 app.config["MONGO_URI"] = "mongodb://localhost:27017/APIBase"
 #app.config["MONGO_URI"] = "mongodb+srv://Amet:amet@clusterprovisionning.3p11m.mongodb.net/vmDatabase?retryWrites=true" \
  #                         "&w=majority"
->>>>>>> cc6d41d62f655ff3eade3fc1477b9cb1c91f65c7
 mongo = PyMongo(app)
 
 
@@ -229,7 +224,7 @@ def delete_project(project_name):
 
 """ END PROJECT CRUD"""
 
-<<<<<<< HEAD
+
 """ GCP CARACTERISTICS"""
 
 
@@ -407,7 +402,6 @@ def delete_amazone_caracteristics(id):
     return id + 'deleted with success'
 
 
-=======
 """ BEGIN CLOUD PROVIDER CRITERIA BEHAVIOR """
 
 
@@ -449,6 +443,5 @@ def delete_criterion(criterion_name):
     return 'ok', 200
 
 
->>>>>>> cc6d41d62f655ff3eade3fc1477b9cb1c91f65c7
 if __name__ == '__main__':
     app.run()
