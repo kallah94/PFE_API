@@ -230,21 +230,7 @@ def delete_project(project_name):
 @app.route('/providers', methods=['POST'])
 def add_gcp_caracteristics():
     new_provider = json_util.loads(request.data)
-    set_provider = new_provider['set_provider']
-    fiabilité = new_provider['fiabilite']
-    flexibilte = new_provider['flexibilite']
-    maturite = new_provider['maturite']
-    securite_donnees = new_provider['data_security']
-    localisation_geographique = new_provider['localisation_geographique']
-    tarification = new_provider['tarification']
-    mongo.db.providers.insert_one({"set_provider": set_provider,
-                                   "fiabilité": fiabilité,
-                                   "flexibilite": flexibilte,
-                                   "maturite": maturite,
-                                   "securite_donnees": securite_donnees,
-                                   "localisation_geographique": localisation_geographique,
-                                   "tarification": tarification
-                                   })
+    mongo.db.providers.insert_one(new_provider)
     return 'ok', 200
 
 
