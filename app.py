@@ -229,14 +229,15 @@ def delete_project(project_name):
 
 @app.route('/providers', methods=['POST'])
 def add_gcp_caracteristics():
-    nom_provider = request.json['nom_provider']
-    fiabilité = request.json['fiabilite']
-    flexibilte = request.json['flexibilite']
-    maturite = request.json['maturite']
-    securite_donnees = request.json['data_security']
-    localisation_geographique = request.json['localisation_geographique']
-    tarification = request.json['tarification']
-    mongo.db.providers.insert_one({"nom_provider": nom_provider,
+    new_provider = json_util.loads(request.data)
+    set_provider = new_provider['set_provider']
+    fiabilité = new_provider['fiabilite']
+    flexibilte = new_provider['flexibilite']
+    maturite = new_provider['maturite']
+    securite_donnees = new_provider['data_security']
+    localisation_geographique = new_provider['localisation_geographique']
+    tarification = new_provider['tarification']
+    mongo.db.providers.insert_one({"set_provider": set_provider,
                                    "fiabilité": fiabilité,
                                    "flexibilite": flexibilte,
                                    "maturite": maturite,
@@ -249,8 +250,8 @@ def add_gcp_caracteristics():
 
 @app.route('/providers', methods=['GET'])
 def get_all_providers_caracteristics():
-    gcp_carateristics = mongo.db.gcp.find()
-    result = json_util.dumps(gcp_carateristics)
+    providers_carateristics = mongo.db.providers.find()
+    result = json_util.dumps(providers_carateristics)
     return result
 
 
@@ -268,7 +269,7 @@ def update_provider_by_name(nom_provider):
     securite_donnees = request.json['data_security']
     localisation_geographique = request.json['localisation_geographique']
     tarification = request.json['tarification']
-    mongo.db.providers.update_one({'nom_provider': nom_provider}, {'$set': {"fiabilité": fiabilité,
+    mongo.db.providers.update_one({'set_provider': nom_provider}, {'$set': {"fiabilité": fiabilité,
                                                                             "flexibilite": flexibilte,
                                                                             "maturite": maturite,
                                                                             "securite_donnees": securite_donnees,
@@ -281,7 +282,7 @@ def update_provider_by_name(nom_provider):
 
 @app.route('/providers/<nom_provider>', methods=['DELETE'])
 def delete_provider_by_name(nom_provider):
-    mongo.db.providers.delete_one({'nom_provider': nom_provider})
+    mongo.db.providers.delete_one({'set_provider': nom_provider})
     return nom_provider + 'deleted with success'
 
 
