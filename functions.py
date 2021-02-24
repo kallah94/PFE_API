@@ -59,22 +59,20 @@ def complexity_rate():
         rate += 5
     else:
         rate += 12
-    if len_dep == 0:
+    if len_dep <= 4:
         pass
-    elif len_dep <= 5:
-        rate += 3
     elif len_dep <= 10:
         rate += 8
     else:
-        rate += 5
+        rate += 15
     if len_connected_app == 0:
         pass
     elif len_connected_app <= 4:
-        rate += 3
+        rate += 6
     elif len_connected_app <= 10:
-        rate += 9
-    else:
         rate += 15
+    else:
+        rate += 20
     if number_of_vm <= 3:
         rate += 1
     elif number_of_vm <= 7:
@@ -98,9 +96,9 @@ def availability_rate():
 def criticity_rate():
     rate = 0
     if environment == 'dev':
-        rate += 2
+        pass
     if environment == 'test':
-        rate += 3
+        pass
     if environment == 'prod':
         rate += 15
     if len_connected_app == 0:
@@ -114,8 +112,40 @@ def criticity_rate():
     return rate
 
 
+def criticity_bound(app_criticity):
+    if (app_criticity - criticity_rate()) / criticity_rate() > 0.4:
+        return True
+    else:
+        return False
+
+
 def compare_vectors(vector_rule, vector_project):
-    vect1 = np.array(vector_rule)
-    vect2 = np.array(vector_project)
-    diff_cost = np.dot(vect2, vect1) / (np.linalg.norm(vect2) * np.linalg.norm(vect1))
-    return diff_cost
+    if criticity_bound(vector_project[0]):
+
+        vect1 = np.array(vector_rule)
+        vect2 = np.array(vector_project)
+        diff_cost = np.dot(vect2, vect1) / (np.linalg.norm(vect2) * np.linalg.norm(vect1))
+        return diff_cost
+    else:
+        return "Criticality of this application is out of boundaries please deployed On premise"
+
+
+def build_criteria_behavior_matrix(data):
+    i = []
+    for doc in data:
+        if doc['behavior'] == 'benefit':
+            i.append(1)
+        else:
+            i.append(0)
+    print(i)
+    return i
+
+
+def decision():
+    from topsis import topsis
+    a = [[7, 9, 9, 8], [8, 7, 8, 7], [9, 6, 8, 9], [6, 7, 8, 6]]
+    w = [0.1, 0.4, 0.3, 0.2]
+    i = [1, 1, 1, 0]
+    decision = topsis(a, w, i)
+    decision.calc()
+    print(decision.C)
