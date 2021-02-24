@@ -13,10 +13,10 @@ app.config.from_envvar('ENV_FILE_LOCATION')
 app.config['SECRET_KEY'] = 'secret-key-kallah'
 app_context = app.app_context()
 app_context.push()
+app.config["MONGO_URI"] = "mongodb://localhost:27017/APIBase"
+#app.config["MONGO_URI"] = "mongodb+srv://Amet:amet@clusterprovisionning.3p11m.mongodb.net/vmDatabase?retryWrites=true" \
+ #                         "&w=majority"
 
-app.config["MONGO_URI"] = "mongodb://localhost:27017/APIBASE"
-# app.config["MONGO_URI"] = "mongodb+srv://Amet:amet@clusterprovisionning.3p11m.mongodb.net/vmDatabase?retryWrites=true" \
-#                         "&w=majority"
 mongo = PyMongo(app)
 
 
@@ -224,8 +224,47 @@ def delete_project(project_name):
 
 """ END PROJECT CRUD"""
 
-""" CLOUD PROVIDERS CARACTERISTICS"""
+""" BEGIN CLOUD PROVIDER CRITERIA BEHAVIOR """
 
+
+@app.route("/providers/criteria", methods=['GET'])
+def get_criteria():
+    criteria = [doc for doc in mongo.db.criteria.find({})]
+    build_criteria_behavior_matrix(criteria)
+    return json_util.dumps({'criteria': criteria}), 200
+
+
+@app.route("/providers/criteria", methods=['POST'])
+def set_criterion():
+    criteria = json_util.loads(request.data)
+    mongo.db.criteria.insert_one(criteria)
+    return 'Ok', 200
+
+
+@app.route("/providers/criteria/<criterion_name>", methods=['PUT'])
+def update_criterion(criterion_name):
+    new_data = json_util.loads(request.data)
+    behavior = new_data['behavior']
+    mongo.db.criteria.update_one({"name": criterion_name}, {
+        '$set': {
+           "behavior": behavior
+        }
+    })
+    return 'Ok', 200
+
+
+@app.route("/providers/criteria/<criterion_name>", methods=['GET'])
+def get_criterion(criterion_name):
+    criterion = mongo.db.criteria.find_one({"name": criterion_name})
+    return json_util.dumps({'criterion': criterion}), 200
+
+
+@app.route('/providers/criteria/<criterion_name>', methods=['DELETE'])
+def delete_criterion(criterion_name):
+    mongo.db.criteria.delete_one({"name": criterion_name})
+    return 'ok', 200
+
+  
 
 @app.route('/providers', methods=['POST'])
 def add_gcp_caracteristics():
@@ -280,10 +319,12 @@ def update_provider_by_name(nom_provider):
     return 'ok', 200
 
 
+
 @app.route('/providers/<nom_provider>', methods=['DELETE'])
 def delete_provider_by_name(nom_provider):
     mongo.db.providers.delete_one({'set_provider': nom_provider})
     return nom_provider + 'deleted with success'
+
 
 
 """ BEGIN CLOUD PROVIDER CRITERIA BEHAVIOR """
