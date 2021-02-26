@@ -170,7 +170,10 @@ def conseil():
     criticity_bound(data["criticity"])
     vector_rule = [rule["complexity"], rule["availability"], rule["criticity"]]
     vector = [data["complexity"], data["availability"], data["criticity"]]
-    return {"score": compare_vectors(vector_rule, vector), "providers": ["GCP", "AWS", "AZUR"]}, 200
+    providers = [doc for doc in mongo.db.providers.find({})]
+    criteria = [doc for doc in mongo.db.criteria.find({})]
+    providers = make_provider_list(providers, criteria)
+    return {"score": compare_vectors(vector_rule, vector), "providers": providers}, 200
 
 
 @app.route('/projects/<name>', methods=['PUT'])
@@ -232,9 +235,11 @@ def set_criterion():
 def update_criterion(criterion_name):
     new_data = json_util.loads(request.data)
     behavior = new_data['behavior']
+    weight = new_data['weight']
     mongo.db.criteria.update_one({"name": criterion_name}, {
         '$set': {
-            "behavior": behavior
+            "behavior": behavior,
+            "weight": weight
         }
     })
     return 'Ok', 200
@@ -252,6 +257,12 @@ def delete_criterion(criterion_name):
     return 'ok', 200
 
 
+""" END CLOUD PROVIDER CRITERIA BEHAVIOR """
+
+
+""" BEGIN CRUD PROVIDERS BEHAVIORS """
+
+
 @app.route('/providers', methods=['POST'])
 def set_provider():
     new_provider = json_util.loads(request.data)
@@ -262,6 +273,8 @@ def set_provider():
 @app.route('/providers', methods=['GET'])
 def get_providers():
     providers = [doc for doc in mongo.db.providers.find({})]
+    criteria = [doc for doc in mongo.db.criteria.find({})]
+    make_provider_list(providers, criteria)
     return json_util.dumps({'providers': providers}), 200
 
 
@@ -278,63 +291,25 @@ def update_provider(provider_name):
     maturity = request.json['maturity']
     data_security = request.json['data_security']
     geolocation = request.json['geolocation']
-    cost = request.json['cost']
+    price = request.json['price']
     mongo.db.providers.update_one({'name': provider_name}, {'$set': {"reliability": reliability,
                                                                      "flexibility": flexibility,
                                                                      "maturity": maturity,
                                                                      "data_security": data_security,
                                                                      "geolocation": geolocation,
-                                                                     "cost": cost
+                                                                     "price": price
                                                                      }
                                                             })
     return 'ok', 200
 
 
-@app.route('/providers/<nom_provider>', methods=['DELETE'])
-def delete_provider(nom_provider):
-    mongo.db.providers.delete_one({'set_provider': nom_provider})
-    return nom_provider + 'deleted with success'
+@app.route('/providers/<provider_name>', methods=['DELETE'])
+def delete_provider(provider_name):
+    mongo.db.providers.delete_one({'name': provider_name})
+    return provider_name + ' deleted with success', 200
 
 
-""" BEGIN CLOUD PROVIDER CRITERIA BEHAVIOR """
-
-
-@app.route("/providers/criteria", methods=['GET'])
-def get_criteria():
-    criteria = [doc for doc in mongo.db.criteria.find({})]
-    build_criteria_behavior_matrix(criteria)
-    return json_util.dumps({'criteria': criteria}), 200
-
-
-@app.route("/providers/criteria", methods=['POST'])
-def set_criterion():
-    criteria = json_util.loads(request.data)
-    mongo.db.criteria.insert_one(criteria)
-    return 'Ok', 200
-
-
-@app.route("/providers/criteria/<criterion_name>", methods=['PUT'])
-def update_criterion(criterion_name):
-    new_data = json_util.loads(request.data)
-    behavior = new_data['behavior']
-    mongo.db.criteria.update_one({"name": criterion_name}, {
-        '$set': {
-            "behavior": behavior
-        }
-    })
-    return 'Ok', 200
-
-
-@app.route("/providers/criteria/<criterion_name>", methods=['GET'])
-def get_criterion(criterion_name):
-    criterion = mongo.db.criteria.find_one({"name": criterion_name})
-    return json_util.dumps({'criterion': criterion}), 200
-
-
-@app.route('/providers/criteria/<criterion_name>', methods=['DELETE'])
-def delete_criterion(criterion_name):
-    mongo.db.criteria.delete_one({"name": criterion_name})
-    return 'ok', 200
+""" END CRUD PROVIDERS BEHAVIORS """
 
 
 if __name__ == '__main__':

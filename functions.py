@@ -1,5 +1,7 @@
-import numpy as np
+import operator
 
+import numpy as np
+from topsis import topsis
 
 def setup(data):
     global project_architecture
@@ -131,21 +133,55 @@ def compare_vectors(vector_rule, vector_project):
 
 
 def build_criteria_behavior_matrix(data):
-    i = []
+    behavior_matrix = []
+    weight_matrix = []
+    criteria_names = []
     for doc in data:
         if doc['behavior'] == 'benefit':
-            i.append(1)
+            behavior_matrix.append(1)
         else:
-            i.append(0)
-    print(i)
-    return i
+            behavior_matrix.append(0)
+        criteria_names.append(doc['name'])
+        weight_matrix.append(doc['weight'])
+    data = {"behaviors": behavior_matrix, "weights": weight_matrix, "criteria_names": criteria_names}
+    return data
+
+
+def make_provider_list(providers, criteria):
+    data = build_criteria_behavior_matrix(criteria)
+    criteria_names = data['criteria_names']
+    weights = data['weights']
+    behaviors = data['behaviors']
+    providers_name = []
+    providers_criteria_matrix = []
+    for provider in providers:
+        criteria = []
+        providers_name.append(provider['name'])
+        for criteria_name in criteria_names:
+            criteria.append(provider[criteria_name])
+        providers_criteria_matrix.append(criteria)
+    print(providers_criteria_matrix, providers_name)
+    decision = topsis(providers_criteria_matrix, weights, behaviors)
+    decision.calc()
+    scores = decision.C.tolist()
+    result = list(map(lambda item: {'provider': item[0], 'score': item[1]}, zip(providers_name, scores)))
+    result.sort(key=operator.itemgetter('score'), reverse=True)
+    finalproviders = []
+    for provider in result:
+        finalproviders.append(provider['provider'])
+    print(finalproviders)
+    return finalproviders
 
 
 def decision():
-    from topsis import topsis
-    a = [[7, 9, 9, 8], [8, 7, 8, 7], [9, 6, 8, 9], [6, 7, 8, 6]]
+
+    providers = ['GCP', 'AWS']
+    scores = []
+    a = [[8, 7, 8, 7], [7, 9, 9, 8], [9, 6, 8, 9], [6, 7, 8, 6]]
     w = [0.1, 0.4, 0.3, 0.2]
     i = [1, 1, 1, 0]
     decision = topsis(a, w, i)
     decision.calc()
-    print(decision.C)
+    scores = decision.C.tolist()
+
+    print(scores)
