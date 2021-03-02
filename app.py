@@ -1,12 +1,17 @@
 import datetime
+
+from werkzeug import Response
+
 from functions import *
 from flask import Flask, request, redirect, url_for
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required
 from flask_bcrypt import Bcrypt
 from flask_pymongo import PyMongo
+from flask_cors import CORS
 from bson import json_util, ObjectId
 
 app = Flask(__name__)
+CORS(app)
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
 app.config.from_envvar('ENV_FILE_LOCATION')
@@ -30,9 +35,14 @@ def register():
     user_data = json_util.loads(request.data)
     username = user_data['username']
     password = user_data['password']
-    hashed_password = Bcrypt.generate_password_hash(Bcrypt, password)
-    mongo.db.users.insert_one({"username": username, "password": hashed_password})
-    return 'ok', 200
+    req = mongo.db.users.find_one({"username": username})
+    if username and password and username!=req:
+        hashed_password = Bcrypt.generate_password_hash(Bcrypt, password)
+        mongo.db.users.insert_one({"username": username, "password": hashed_password})
+        return {"message": "ok"}
+
+    else:
+        return {"message": "not found"}
 
 
 @app.route('/login', methods=['POST'])
@@ -40,14 +50,17 @@ def login():
     data = json_util.loads(request.data)
     username = data['username']
     password = data['password']
-    hashed = mongo.db.users.find_one({"username": username})['password']
-    authorized = bcrypt.check_password_hash(hashed, str(password))
-    if not authorized:
-        return {'error': 'username or password invalid'}, 401
+    if username and password:
+        hashed = mongo.db.users.find_one({"username": username})['password']
+        authorized = bcrypt.check_password_hash(hashed, str(password))
+        if not authorized:
+            return {'error': 'username or password invalid'}, 401
 
-    expires = datetime.timedelta(days=7)
-    access_token = create_access_token(identity=str(password), expires_delta=expires)
-    return {'token': access_token}, 200
+        expires = datetime.timedelta(days=7)
+        access_token = create_access_token(identity=str(password), expires_delta=expires)
+        return {'token': access_token}, 200
+    else:
+        return {"message": "not found"}
 
 
 @app.route('/users', methods=['GET'])
