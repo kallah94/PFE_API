@@ -273,8 +273,6 @@ def set_provider():
 @app.route('/providers', methods=['GET'])
 def get_providers():
     providers = [doc for doc in mongo.db.providers.find({})]
-    criteria = [doc for doc in mongo.db.criteria.find({})]
-    make_provider_list(providers, criteria)
     return json_util.dumps({'providers': providers}), 200
 
 
@@ -311,6 +309,25 @@ def delete_provider(provider_name):
 
 """ END CRUD PROVIDERS BEHAVIORS """
 
+
+
+""" CLOUD PROVIDERS PRICING """
+
+@app.route('/providers/pricing', methods=['GET'])
+def get_all_pricing():
+    pricings = [doc for doc in mongo.db.pricings.find({})]
+    return json_util.dumps({'providers': pricings}), 200
+
+@app.route('/providers/pricing', methods=['POST'])
+def set_pricing():
+    new_pricing = json_util.loads(request.data)
+    mongo.db.pricings.insert_one(new_pricing)
+    return 'ok', 200
+
+@app.route('/providers/pricing/<provider>/<category>', methods=['DELETE'])
+def delete_pricing(provider, category):
+    mongo.db.criteria.delete_one({"provider": provider, "category": category})
+    return 'ok', 200
 
 if __name__ == '__main__':
     app.run()
