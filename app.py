@@ -132,9 +132,14 @@ def update_rule(name):
     complexity = new_data["complexity"]
     availability = new_data["availability"]
     criticity = new_data["criticity"]
+    type = new_data["type"]
     mongo.db.rulesappcloudready.update_one({"name": name},
                                            {'$set': {"complexity": complexity,
-                                                     "availability": availability, "criticity": criticity}})
+                                                        "availability": availability,
+                                                        "criticity": criticity,
+                                                        "type": type}
+                                            }
+                                        )
     return 'ok', 200
 
 
@@ -165,13 +170,14 @@ def get_project(project_name):
 @app.route('/projects', methods=['POST'])
 def conseil():
     project = json_util.loads(request.data)
-    rule = mongo.db.rulesappcloudready.find_one({"name": "rule1"})
     data = setup(project)
-    criticity_bound(data["criticity"])
+    rule = mongo.db.rulesappcloudready.find_one({"type": data["application_type"]})
     vector_rule = [rule["complexity"], rule["availability"], rule["criticity"]]
     vector = [data["complexity"], data["availability"], data["criticity"]]
     providers = [doc for doc in mongo.db.providers.find({})]
     criteria = [doc for doc in mongo.db.criteria.find({})]
+    categories = [doc for doc in mongo.db.pricing.find({"cpu": data["cpu"], "ram": data["ram"]})]
+    app_readyness(vector_rule, vector, data["criticity"], categories)
     providers = make_provider_list(providers, criteria)
     return {"score": compare_vectors(vector_rule, vector), "providers": providers}, 200
 
@@ -260,8 +266,6 @@ def delete_criterion(criterion_name):
 """ END CLOUD PROVIDER CRITERIA BEHAVIOR """
 
 
-""" BEGIN CRUD PROVIDERS BEHAVIORS """
-
 
 @app.route('/providers', methods=['POST'])
 def set_provider():
@@ -287,14 +291,14 @@ def update_provider(provider_name):
     reliability = request.json['reliability']
     flexibility = request.json['flexibility']
     maturity = request.json['maturity']
-    data_security = request.json['data_security']
-    geolocation = request.json['geolocation']
+    datasecurity = request.json['datasecurity']
+    geodispatching = request.json['geodispatching']
     price = request.json['price']
     mongo.db.providers.update_one({'name': provider_name}, {'$set': {"reliability": reliability,
                                                                      "flexibility": flexibility,
                                                                      "maturity": maturity,
-                                                                     "data_security": data_security,
-                                                                     "geolocation": geolocation,
+                                                                     "datasecurity": datasecurity,
+                                                                     "geodispatching": geodispatching,
                                                                      "price": price
                                                                      }
                                                             })
@@ -315,19 +319,40 @@ def delete_provider(provider_name):
 
 @app.route('/providers/pricing', methods=['GET'])
 def get_all_pricing():
-    pricings = [doc for doc in mongo.db.pricings.find({})]
-    return json_util.dumps({'providers': pricings}), 200
+    pricings = [doc for doc in mongo.db.pricing.find({})]
+    return json_util.dumps({'pricings': pricings}), 200
 
 @app.route('/providers/pricing', methods=['POST'])
 def set_pricing():
     new_pricing = json_util.loads(request.data)
-    mongo.db.pricings.insert_one(new_pricing)
+    mongo.db.pricing.insert_one(new_pricing)
     return 'ok', 200
+
+@app.route('/providers/pricing/<provider>/<category>', methods=['GET'])
+def detail_pricing(provider, category):
+    pricing = mongo.db.pricing.find_one({'provider': provider, 'category': category})
+    return json_util.dumps({'pricing': pricing}), 200
 
 @app.route('/providers/pricing/<provider>/<category>', methods=['DELETE'])
 def delete_pricing(provider, category):
-    mongo.db.criteria.delete_one({"provider": provider, "category": category})
+    mongo.db.pricing.delete_one({"provider": provider, "category": category})
     return 'ok', 200
+
+@app.route("/providers/pricing/<provider>/<category>", methods=['PUT'])
+def update_pricing(provider, category):
+    cpu = request.json['cpu']
+    ram = request.json['ram']
+    price_per_hour = request.json['pricePerHour']
+    price_per_month = request.json['pricePerMonth']
+    mongo.db.pricing.update_one({'provider': provider, 'category': category}, {
+        '$set': {
+            'cpu': cpu, 'ram': ram, 'pricePerHour': price_per_hour, 'pricePermonth': price_per_month
+        }
+    })
+    return 'ok', 200
+
+""" END CLOUD PROVIDERS PRICING """
+
 
 if __name__ == '__main__':
     app.run()
