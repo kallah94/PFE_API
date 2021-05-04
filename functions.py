@@ -57,7 +57,7 @@ def setup(data):
         cpu = None
     
     try:
-        ram = data["ram"]
+        ram = data["memory"]
     except KeyError:
         ram = None
     
@@ -66,7 +66,14 @@ def setup(data):
     except KeyError:
         application_type = "default"
 
-    return {"complexity": complexity_rate(), "availability": availability_rate(), "criticity": criticity_rate()}
+    return {
+        "complexity": complexity_rate(),
+        "availability": availability_rate(),
+        "criticity": criticity_rate(),
+        'application_type': application_type,
+        "cpu": cpu,
+        "ram": ram
+        }
 
 
 def complexity_rate():
@@ -85,8 +92,10 @@ def complexity_rate():
         rate += 5
     else:
         rate += 12
-    if len_dep <= 4:
+    if len_dep == 0:
         pass
+    elif len_dep <= 4:
+        rate += 2
     elif len_dep <= 10:
         rate += 8
     else:
@@ -103,8 +112,10 @@ def complexity_rate():
         rate += 1
     elif number_of_vm <= 7:
         rate += 3
+    elif number_of_vm <= 10:
+        rate += 8
     else:
-        rate += 5
+        rate += 15
     return rate
 
 
@@ -146,11 +157,14 @@ def criticity_bound(app_criticity):
 
 
 def price_min_on_premise(categories):
-    min_price = cost_estimation
+    try:
+        min_price = int(cost_estimation)
+    except:
+        return False
     print(categories)
     for category in categories:
-        if category["pricePerMonth"] < min_price:
-            min_price = category["pricePerMonth"]
+        if int(category["pricePerMonth"]) < min_price:
+            min_price = int(category["pricePerMonth"])
     if min_price == cost_estimation:
         return True
     else:
@@ -190,8 +204,9 @@ def build_criteria_behavior_matrix(data):
         else:
             behavior_matrix.append(0)
         criteria_names.append(doc['name'])
-        weight_matrix.append(doc['weight'])
+        weight_matrix.append(doc['percentage'])
     data = {"behaviors": behavior_matrix, "weights": weight_matrix, "criteria_names": criteria_names}
+    print(data)
     return data
 
 
@@ -206,7 +221,10 @@ def make_provider_list(providers, criteria):
         criteria = []
         providers_name.append(provider['name'])
         for criteria_name in criteria_names:
-            criteria.append(provider[criteria_name])
+            try:
+                criteria.append(provider[criteria_name])
+            except KeyError:
+                continue
         providers_criteria_matrix.append(criteria)
     decision = topsis(providers_criteria_matrix, weights, behaviors)
     decision.calc()
