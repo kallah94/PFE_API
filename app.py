@@ -490,27 +490,30 @@ def delete_user(username):
                'message': 'user remove successfully'
            }, 200
 
-""""
+
 @app.before_first_request
 def setup_admin():
     hashed_password = Bcrypt.generate_password_hash(Bcrypt, 'first_password')
     try:
+        user = mongo.db.users.find_one({"username": 'admin'})
+        return 'ok', 200
+    except:
         mongo.db.users.insert_one({"username": 'admin', "email": "fmoussa@ept.sn", "password": hashed_password,
                                    "role": "admin"})
         text = "count are successfully created"
-    except:
-        text = "count already exist !!"
-    msg = Message()
-    msg.subject = "Mail de recuperation de password "
-    msg.recipients = ["fmoussa@ept.sn"]
-    msg.sender = 'kallahbenakhmeth@gmail.com'
-    msg.body = 'Admin Count Credential'
-    msg.html = render_template_string('<h4>You are the admin of our plateforme please connect with this credentiel</h4>\
-           <h4>username: <strong>admin</strong></h4> <h4> password: <strong>first_password</strong></h4> <h4> status:\
-                                      {{text}}</h4>', text=text)
-    mail.send(msg)
-    print("doing something important with %s")
-"""
+        msg = Message()
+        msg.subject = "Mail de recuperation de password "
+        msg.recipients = ["fmoussa@ept.sn"]
+        msg.sender = 'kallahbenakhmeth@gmail.com'
+        msg.body = 'Admin Count Credential'
+        msg.html = render_template_string('<h4>You are the admin of our plateforme please connect with this credentiel</h4>\
+               <h4>username: <strong>admin</strong></h4> <h4> password: <strong>first_password</strong></h4> <h4> status:\
+                                          {{text}}</h4>', text=text)
+        mail.send(msg)
+        print("doing something important with %s")
+
+        return 'ok', 200
+
 
 """ END USER MANAGEMENT SECTION """
 
@@ -540,10 +543,9 @@ def set_field(namespace):
 def delete_attribute(namespace, criterion):
     try:
         mongo.db.fields[namespace].detele_one({"criterion": criterion})
-        return { 'message': 'criterion deleted successfully !!!'}, 200
+        return {'message': 'criterion deleted successfully !!!'}, 200
     except:
-        return { 'error': 'error occur during process !!!'}, 500
-
+        return {'error': 'error occur during process !!!'}, 500
 
 
 @app.route('/fields/<namespace>/<criterion>', methods=['UPDATE'])
@@ -551,17 +553,17 @@ def update_attribute(namespace, criterion):
     try:
         criterion = request.json['criterion']
         conditions = request.json['conditions']
-        mongo.db.fields[namespace].update_one({'criterion': criterion},{
-        '$set': {
-            'conditions': conditions
-        }
+        mongo.db.fields[namespace].update_one({'criterion': criterion}, {
+            '$set': {
+                'conditions': conditions
+            }
         })
         return {'message': 'ok'}, 200
 
     except:
         return {'error': 'failed !'}, 500
 
-        
+
 """ END RULES FIELDS"""
 if __name__ == '__main__':
     app.run()
