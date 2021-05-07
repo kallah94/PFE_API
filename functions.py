@@ -12,6 +12,9 @@ def setup(data):
     global environment
     global data_size
     global cost_estimation
+    global ram
+    global cpu
+    global application_type
 
     try:
         project_architecture = data["projectArchitecture"]
@@ -42,7 +45,35 @@ def setup(data):
         environment = data["environment"]
     except KeyError:
         environment = None
-    return {"complexity": complexity_rate(), "availability": availability_rate(), "criticity": criticity_rate()}
+    
+    try:
+        cost_estimation = data["capex"]
+    except KeyError:
+        cost_estimation = None
+
+    try:
+        cpu = data["cpu"]
+    except KeyError:
+        cpu = None
+    
+    try:
+        ram = data["memory"]
+    except KeyError:
+        ram = None
+    
+    try:
+        application_type = data["applicationType"]
+    except KeyError:
+        application_type = "default"
+
+    return {
+        "complexity": complexity_rate(),
+        "availability": availability_rate(),
+        "criticity": criticity_rate(),
+        'application_type': application_type,
+        "cpu": cpu,
+        "ram": ram
+        }
 
 
 def complexity_rate():
@@ -61,8 +92,10 @@ def complexity_rate():
         rate += 5
     else:
         rate += 12
-    if len_dep <= 4:
+    if len_dep == 0:
         pass
+    elif len_dep <= 4:
+        rate += 2
     elif len_dep <= 10:
         rate += 8
     else:
@@ -79,8 +112,10 @@ def complexity_rate():
         rate += 1
     elif number_of_vm <= 7:
         rate += 3
+    elif number_of_vm <= 10:
+        rate += 8
     else:
-        rate += 5
+        rate += 15
     return rate
 
 
@@ -115,22 +150,49 @@ def criticity_rate():
 
 
 def criticity_bound(app_criticity):
-    if (app_criticity - criticity_rate()) / criticity_rate() > 0.4:
+    if (app_criticity - criticity_rate()) / criticity_rate() > 0.2:
         return True
     else:
         return False
 
 
-def compare_vectors(vector_rule, vector_project):
-    if criticity_bound(vector_project[0]):
-
-        vect1 = np.array(vector_rule)
-        vect2 = np.array(vector_project)
-        diff_cost = np.dot(vect2, vect1) / (np.linalg.norm(vect2) * np.linalg.norm(vect1))
-        return diff_cost
+def price_min_on_premise(categories):
+    try:
+        min_price = int(cost_estimation)
+    except:
+        return False
+    print(categories)
+    for category in categories:
+        if int(category["pricePerMonth"]) < min_price:
+            min_price = int(category["pricePerMonth"])
+    if min_price == cost_estimation:
+        return True
     else:
-        return "Criticality of this application is out of boundaries please deployed On premise"
+        return False
 
+def compare_vectors(vector_rule, vector_project):
+    vect1 = np.array(vector_rule)
+    vect2 = np.array(vector_project)
+    diff_cost = np.dot(vect2, vect1) / (np.linalg.norm(vect2) * np.linalg.norm(vect1))
+    return diff_cost
+
+def app_readyness(vector_rule, vector_project, app_criticity, categories):
+    """
+    This function decide if the appliation is cloud readyness or not.
+    To do that we will compare the lowest possible estimation cost to the public cloud and the onPremise cost estimation
+    if onPremise exploitation cost is lower than the LPECPC we will suggest to deployed it in OnPremise
+    otherwise we will compare this applications criteria vector with the cloud readyness app criteria vector by the cosinus similarity algorithm.
+    If the application is not  at least at 50% compatible we will suggest to deployed in OnPremise.
+    """
+
+    if price_min_on_premise(categories):
+        return "Deploy On Premise !!!! due to lowest Exploitation Cost"
+    if criticity_bound(app_criticity):
+        return "Deploy On Premise !!! Application criticy is out of boundaries"
+    if compare_vectors(vector_rule, vector_project) >= 0.5 :
+        return "deployed in the public cloud"
+    else:
+        return "deployed On Premise !!! due to an incompatibility with public cloud"
 
 def build_criteria_behavior_matrix(data):
     behavior_matrix = []
@@ -142,8 +204,9 @@ def build_criteria_behavior_matrix(data):
         else:
             behavior_matrix.append(0)
         criteria_names.append(doc['name'])
-        weight_matrix.append(doc['weight'])
+        weight_matrix.append(doc['percentage'])
     data = {"behaviors": behavior_matrix, "weights": weight_matrix, "criteria_names": criteria_names}
+    print(data)
     return data
 
 
@@ -158,9 +221,11 @@ def make_provider_list(providers, criteria):
         criteria = []
         providers_name.append(provider['name'])
         for criteria_name in criteria_names:
-            criteria.append(provider[criteria_name])
+            try:
+                criteria.append(provider[criteria_name])
+            except KeyError:
+                continue
         providers_criteria_matrix.append(criteria)
-    print(providers_criteria_matrix, providers_name)
     decision = topsis(providers_criteria_matrix, weights, behaviors)
     decision.calc()
     scores = decision.C.tolist()
@@ -169,5 +234,4 @@ def make_provider_list(providers, criteria):
     finalproviders = []
     for provider in result:
         finalproviders.append(provider['provider'])
-    print(finalproviders)
     return finalproviders
