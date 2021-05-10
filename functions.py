@@ -3,6 +3,7 @@ import operator
 import numpy as np
 from topsis import topsis
 
+
 def setup(data):
     global project_architecture
     global len_dep
@@ -226,6 +227,7 @@ def make_provider_list(providers, criteria):
             except KeyError:
                 continue
         providers_criteria_matrix.append(criteria)
+   # decision = topsis.topsis(providers_criteria_matrix, weights, behaviors)
     decision = topsis(providers_criteria_matrix, weights, behaviors)
     decision.calc()
     scores = decision.C.tolist()

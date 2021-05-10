@@ -304,7 +304,6 @@ def delete_project(project_name):
 @jwt_required
 def get_criteria():
     criteria = [doc for doc in mongo.db.criteria.find({})]
-    build_criteria_behavior_matrix(criteria)
     return json_util.dumps({'criteria': criteria}), 200
 
 
@@ -496,9 +495,11 @@ def setup_admin():
     hashed_password = Bcrypt.generate_password_hash(Bcrypt, 'first_password')
     try:
         user = mongo.db.users.find_one({"username": 'admin'})
-        return 'ok', 200
-    except:
-        mongo.db.users.insert_one({"username": 'admin', "email": "fmoussa@ept.sn", "password": hashed_password,
+        if user:
+            print(user)
+            return 'ok', 200
+        else:
+             mongo.db.users.insert_one({"username": 'admin', "email": "fmoussa@ept.sn", "password": hashed_password,
                                    "role": "admin"})
         text = "count are successfully created"
         msg = Message()
@@ -513,6 +514,10 @@ def setup_admin():
         print("doing something important with %s")
 
         return 'ok', 200
+
+    except:
+       
+        return {'error': 'error occur'}, 200
 
 
 """ END USER MANAGEMENT SECTION """
